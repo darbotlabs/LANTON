@@ -1,0 +1,6 @@
+{
+  "lan-ui": 7070,
+  "bitnet": 8000,
+  "omniparser": 8800,
+  "flask-gui": 5000
+}

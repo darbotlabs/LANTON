@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "dgSpecHash": "vCRQuTQa6X4=",
+  "success": true,
+  "projectFilePath": "G:\\Github\\old\\darbot-LANton\\LanHub\\LanHub.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\darbot\\.nuget\\packages\\microsoft.extensions.http\\8.0.0\\microsoft.extensions.http.8.0.0.nupkg.sha512"
+  ],
+  "logs": [
+    {
+      "code": "NU1510",
+      "level": "Warning",
+      "message": "PackageReference Microsoft.Extensions.Http will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.",
+      "projectPath": "G:\\Github\\old\\darbot-LANton\\LanHub\\LanHub.csproj",
+      "warningLevel": 1,
+      "filePath": "G:\\Github\\old\\darbot-LANton\\LanHub\\LanHub.csproj",
+      "targetGraphs": []
+    }
+  ]
+}

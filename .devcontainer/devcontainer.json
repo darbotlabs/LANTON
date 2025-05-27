@@ -1,0 +1,30 @@
+{
+    "name": "LANton Development",
+    "image": "mcr.microsoft.com/dotnet/sdk:9.0-preview",
+    "features": {
+        "ghcr.io/devcontainers/features/powershell:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/node:1": {
+            "version": "18"
+        },
+        "ghcr.io/devcontainers/features/python:1": {
+            "version": "3.11"
+        }
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-dotnettools.csharp",
+                "ms-vscode.powershell",
+                "ms-vscode.vscode-node-azure-pack"
+            ],
+            "settings": {
+                "terminal.integrated.defaultProfile.linux": "pwsh"
+            }
+        }
+    },
+    "forwardPorts": [7071],
+    "postCreateCommand": "dotnet restore && npm install -g markdownlint-cli",
+    "remoteUser": "vscode"
+}

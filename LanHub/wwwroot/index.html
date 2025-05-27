@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LANton - Local Agent Network Controller</title>
+    <script defer src="https://unpkg.com/alpinejs@3.12.0/dist/cdn.min.js"></script>
+    <style>
+        /* Error output in PowerShell terminal */
+        .terminal .error {
+            color: var(--status-red);
+        }
+        :root {
+            /* Dark-retro palette from darbot_management.html */
+            --bg-main: #1a1a1a;
+            --bg-panel: #252525;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --accent-primary: #00aaff;
+            --accent-secondary: #0055aa;
+            --status-green: #00ff00;
+            --status-yellow: #ffaa00;
+            --status-red: #ff0000;
+            --terminal-bg: #000000;
+            --terminal-text: #00ff00;
+        }
+        
+        body {
+            font-family: 'Consolas', monospace;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        
+        header {
+            background-color: var(--bg-panel);
+            padding: 0.4rem 1rem 0.4rem 1rem;
+            border-bottom: 2px solid var(--accent-secondary);
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            min-height: unset;
+        }
+        
+        h1 {
+            margin: 0;
+            color: var(--accent-primary);
+            font-weight: normal;
+            font-size: 2rem;
+            line-height: 1.1;
+        }
+        
+        .system-info-inline {
+            color: var(--status-green);
+            font-size: 0.95rem;
+            margin-top: 0;
+            margin-left: 0.1rem;
+            font-family: 'Consolas', monospace;
+            white-space: pre-line;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        
+        nav {
+            display: flex;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--accent-secondary);
+        }
+        
+        nav button {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            margin-right: 0.5rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        
+        nav button:hover {
+            color: var(--accent-primary);
+        }
+        
+        nav button.active {
+            color: var(--accent-primary);
+            border-bottom: 2px solid var(--accent-primary);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .service-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-gap: 1rem;
+        }
+        
+        .service-card {
+            background-color: var(--bg-panel);
+            border-radius: 5px;
+            padding: 1rem;
+            border-left: 4px solid var(--accent-secondary);
+        }
+        
+        .service-card h3 {
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .status-dot.running {
+            background-color: var(--status-green);
+            box-shadow: 0 0 5px var(--status-green);
+        }
+        
+        .status-dot.stopped {
+            background-color: var(--status-red);
+        }
+        
+        .service-meta {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+        
+        .service-control {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 1rem;
+        }
+        
+        button {
+            background-color: var(--accent-secondary);
+            color: var(--text-primary);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: var(--accent-primary);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        th, td {
+            padding: 0.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--bg-panel);
+        }
+        
+        th {
+            color: var(--accent-primary);
+        }
+        
+        .terminal {
+            background-color: var(--terminal-bg);
+            color: var(--terminal-text);
+            font-family: 'Consolas', monospace;
+            padding: 1rem;
+            border-radius: 5px;
+            height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        
+        .refresh-btn {
+            margin-left: 1rem;
+            background-color: transparent;
+            border: 1px solid var(--accent-primary);
+        }
+        
+        .console-input {
+            display: flex;
+            margin-top: 1rem;
+        }
+        
+        .console-input input {
+            flex: 1;
+            background-color: var(--bg-panel);
+            color: var(--text-primary);
+            border: 1px solid var(--accent-secondary);
+            padding: 0.5rem;
+            font-family: 'Consolas', monospace;
+        }
+        
+        .console-input button {
+            margin-left: 0.5rem;
+        }
+        /* Multiline PowerShell input */
+        .console-input textarea {
+            resize: none;
+            width: 100%;
+            font-family: inherit;
+        }
+        
+        .sysinternals-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .sysinternals-controls button {
+            padding: 8px 16px;
+        }
+        
+        .sysinternals-content {
+            background-color: var(--bg-panel);
+            padding: 15px;
+            border-radius: 5px;
+        }
+        
+        .sysinfo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-gap: 15px;
+        }
+        
+        .sysinfo-section {
+            background-color: var(--bg-main);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .sysinfo-section h4 {
+            color: var(--accent-primary);
+            margin-top: 0;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--accent-secondary);
+            padding-bottom: 5px;
+        }
+        
+        .sysinfo-item {
+            margin-bottom: 5px;
+        }
+        
+        .sysinfo-label {
+            color: var(--text-secondary);
+        }
+        
+        .loading-indicator {
+            color: var(--accent-primary);
+            margin: 20px 0;
+            text-align: center;
+            font-style: italic;
+        }
+        
+        .back-button {
+            margin-bottom: 15px;
+            background-color: var(--bg-main);
+            border: 1px solid var(--accent-secondary);
+        }
+    </style>
+</head>
+<body>    <div x-data="lantonUI()">
+        <header>
+            <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                <h1 style="margin-bottom: 0; line-height: 1.1;">LANton</h1>
+                <div class="system-info-inline" x-show="systemInfo" style="margin-top: 0; padding-left: 2.5em;">
+                    <span x-text="systemInfo"></span>
+                </div>
+            </div>
+            <div style="align-self: flex-start;">
+                <button class="refresh-btn" @click="refreshData">Refresh</button>
+            </div>
+        </header>
+        
+        <div class="container">
+            <nav>
+                <button :class="{ active: currentTab === 'dashboard' }" @click="currentTab = 'dashboard'">Dashboard</button>
+                <button :class="{ active: currentTab === 'ports' }" @click="currentTab = 'ports'">Ports</button>
+                <button :class="{ active: currentTab === 'logs' }" @click="currentTab = 'logs'">Logs</button>
+                <button :class="{ active: currentTab === 'commands' }" @click="currentTab = 'commands'">Commands</button>
+                <button :class="{ active: currentTab === 'powershell' }" @click="currentTab = 'powershell'">PowerShell</button>
+                <button :class="{ active: currentTab === 'sysinternals' }" @click="loadSysinternalsData(); currentTab = 'sysinternals'">Sysinternals</button>
+            </nav>
+            
+            <!-- Dashboard Tab -->
+            <div class="tab-content" :class="{ active: currentTab === 'dashboard' }">
+                <div class="service-grid">
+                    <template x-for="(service, name) in services" :key="name">
+                        <div class="service-card">
+                            <h3>
+                                <span class="status-dot" :class="{ 'running': service.status === 'RUNNING', 'stopped': service.status !== 'RUNNING' }"></span>
+                                <span x-text="name"></span>
+                            </h3>
+                            <div class="service-meta">
+                                <div>Port: <span x-text="service.port"></span></div>
+                                <div x-show="service.pid">PID: <span x-text="service.pid"></span></div>
+                                <div>Status: <span x-text="service.status"></span></div>
+                            </div>
+                            <div class="service-control">
+                                <button @click="startService(name)" x-show="service.status !== 'RUNNING'">Start</button>
+                                <button @click="stopService(name)" x-show="service.status === 'RUNNING'">Stop</button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            
+            <!-- Ports Tab -->
+            <div class="tab-content" :class="{ active: currentTab === 'ports' }">
+                <h2>Port Assignments</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Service</th>
+                            <th>Port</th>
+                            <th>PID</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="(service, name) in services" :key="name">
+                            <tr>
+                                <td x-text="name"></td>
+                                <td x-text="service.port"></td>
+                                <td x-text="service.pid || '-'"></td>
+                                <td x-text="service.status"></td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Logs Tab -->
+            <div class="tab-content" :class="{ active: currentTab === 'logs' }">
+                <h2>Service Logs</h2>
+                <select x-model="currentLogService">
+                    <option value="">Select a service...</option>
+                    <template x-for="(service, name) in services" :key="name">
+                        <option :value="name" x-text="name"></option>
+                    </template>
+                </select>
+                <div class="terminal" x-ref="logTerminal" x-text="logs"></div>
+            </div>
+            
+            <!-- Commands Tab -->
+            <div class="tab-content" :class="{ active: currentTab === 'commands' }">
+                <h2>MCP Console</h2>
+                <div class="terminal" x-ref="commandTerminal" x-text="commandOutput"></div>
+                <div class="console-input">
+                    <input type="text" x-model="command" @keyup.enter="executeCommand" placeholder="Enter command...">
+                    <button @click="executeCommand">Send</button>
+                </div>
+            </div>
+            
+            <!-- PowerShell Tab -->
+            <div class="tab-content" :class="{ active: currentTab === 'powershell' }" x-show="currentTab === 'powershell'" x-init="$nextTick(() => powershellInput.focus())">
+                <h2>PowerShell Console</h2>
+                <div class="terminal" x-ref="powershellTerminal" x-text="powershellOutput"></div>
+                <div class="console-input powershell-console-input">
+                    <textarea x-ref="powershellInput" x-model="powershellCommand" class="powershell-input" @keydown="handlePowershellKey($event)" placeholder="Enter PowerShell command..." rows="1"></textarea>
+                    <button @click="executePowershellCommand">Send</button>
+                </div>
+            </div>
+            
+            <!-- Sysinternals Tab -->
+            <div class="tab-content" :class="{ active: currentTab === 'sysinternals' }">
+                <h2>Sysinternals Live Data</h2>
+                
+                <div class="sysinternals-controls">
+                    <button @click="loadProcessData" :disabled="loadingProcesses">Processes</button>
+                    <button @click="loadNetworkData" :disabled="loadingNetwork">Network Connections</button>
+                    <button @click="loadSystemData" :disabled="loadingSystem">System Info</button>
+                    <button @click="refreshSysinternalsData" :disabled="loadingAny">Refresh All</button>
+                </div>
+                
+                <div class="sysinternals-content">
+                    <div x-show="sysinternalsTab === 'processes'">
+                        <h3>Running Processes</h3>
+                        <div class="loading-indicator" x-show="loadingProcesses">Loading...</div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Process</th>
+                                    <th>PID</th>
+                                    <th>CPU %</th>
+                                    <th>Memory</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="proc in processData" :key="proc.PID">
+                                    <tr>
+                                        <td x-text="proc.Process || proc.Name"></td>
+                                        <td x-text="proc.PID"></td>
+                                        <td x-text="proc.CPU || proc['CPU%'] || '0'"></td>
+                                        <td x-text="proc.Mem || proc.WorkingSet || '0'"></td>
+                                        <td>
+                                            <button @click="loadProcessDetails(proc.PID)">Details</button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div x-show="sysinternalsTab === 'network'">
+                        <h3>Network Connections</h3>
+                        <div class="loading-indicator" x-show="loadingNetwork">Loading...</div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Protocol</th>
+                                    <th>Local Address</th>
+                                    <th>Remote Address</th>
+                                    <th>State</th>
+                                    <th>PID</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="(conn, idx) in networkData" :key="idx">
+                                    <tr>
+                                        <td x-text="conn.Protocol || conn.Proto"></td>
+                                        <td x-text="conn.LocalAddress || conn['Local Address']"></td>
+                                        <td x-text="conn.ForeignAddress || conn['Foreign Address']"></td>
+                                        <td x-text="conn.State"></td>
+                                        <td x-text="conn.PID"></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div x-show="sysinternalsTab === 'system'">
+                        <h3>System Information</h3>
+                        <div class="loading-indicator" x-show="loadingSystem">Loading...</div>
+                        <div class="sysinfo-grid">
+                            <template x-for="(value, key) in systemData" :key="key">
+                                <div class="sysinfo-section">
+                                    <h4 x-text="key"></h4>
+                                    <div x-if="typeof value === 'object'">
+                                        <template x-for="(subValue, subKey) in value" :key="subKey">
+                                            <div class="sysinfo-item">
+                                                <span class="sysinfo-label" x-text="subKey"></span>: 
+                                                <span class="sysinfo-value" x-text="subValue"></span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <div x-if="typeof value !== 'object'" class="sysinfo-item">
+                                        <span class="sysinfo-value" x-text="value"></span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    
+                    <div x-show="sysinternalsTab === 'process-details'">
+                        <h3>Process Details</h3>
+                        <button @click="sysinternalsTab = 'processes'" class="back-button">← Back to Processes</button>
+                        <div class="loading-indicator" x-show="loadingProcessDetails">Loading...</div>
+                        
+                        <div x-show="!loadingProcessDetails">
+                            <h4 x-text="'Process: ' + (processDetails.ProcessName || 'PID: ' + processDetails.PID)"></h4>
+                            
+                            <h5>Loaded DLLs</h5>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Base</th>
+                                        <th>Size</th>
+                                        <th>Path</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template x-for="(dll, idx) in processDetails.DLLs || []" :key="idx">
+                                        <tr>
+                                            <td x-text="dll.Base"></td>
+                                            <td x-text="dll.Size"></td>
+                                            <td x-text="dll.Path"></td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>        function lantonUI() {
+            return {
+                currentTab: 'dashboard',
+                services: {},
+                logs: '',
+                command: '',
+                // PowerShell command history
+                powershellCommand: '',
+                powershellHistory: [],
+                powershellHistoryIndex: -1,
+                commandOutput: '> Welcome to LANton MCP Console\n> Type "help" for available commands\n',
+                powershellCommand: '',
+                powershellOutput: '> Welcome to LANton PowerShell Console\n> Type "Get-Help" for PowerShell help\n> Type "lanton" to access LANton CLI\n',
+                sysinternalsCommand: '',
+                sysinternalsOutput: '> Welcome to LANton Sysinternals Console\n> Type "help" for available commands\n',
+                currentLogService: '',
+                systemInfo: '',
+                ws: null,
+                
+                // Sysinternals data
+                processData: [],
+                networkData: [],
+                systemData: {},
+                processDetails: {},
+                sysinternalsTab: 'processes',
+                loadingProcesses: false,
+                loadingNetwork: false,
+                loadingSystem: false,
+                loadingProcessDetails: false,
+                
+                get loadingAny() {
+                    return this.loadingProcesses || this.loadingNetwork || this.loadingSystem || this.loadingProcessDetails;
+                },
+                
+                init() {
+                    this.refreshData();
+                    this.fetchSystemInfo();
+                    this.setupWebSocket();
+                    
+                    // Poll for updates every 5 seconds
+                    setInterval(() => {
+                        this.refreshData();
+                    }, 5000);
+                    
+                    // Watch for log service changes
+                    this.$watch('currentLogService', (value) => {
+                        if (value) {
+                            this.fetchLogs(value);
+                        }
+                    });
+                },
+                
+                fetchSystemInfo() {
+                    fetch('/system-info')
+                        .then(response => response.text())
+                        .then(data => {
+                            // Parse system name and first IPv4 address
+                            let node = '';
+                            let ip = '';
+                            const lines = data.split('\n');
+                            for (const line of lines) {
+                                if (line.startsWith('System Name:')) {
+                                    node = line.replace('System Name:', '').trim();
+                                }
+                                if (line.startsWith('IP Address(es):')) {
+                                    // Take the first IP address only
+                                    const ips = line.replace('IP Address(es):', '').trim().split(',');
+                                    ip = ips[0].trim();
+                                }
+                            }
+                            if (node && ip) {
+                                this.systemInfo = `Node: ${node}; ${ip}`;
+                            } else {
+                                this.systemInfo = '';
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching system info:', error);
+                        });
+                },
+                
+                refreshData() {
+                    fetch('/ports')
+                        .then(response => response.json())
+                        .then(data => {
+                            this.services = data;
+                        })
+                        .catch(error => {
+                            console.error('Error fetching port data:', error);
+                        });
+                },
+                
+                setupWebSocket() {
+                    // In a production app, we would set up WebSocket here
+                    // For now, we're simulating with polling
+                    console.log('WebSocket would be initialized here');
+                },
+                
+                startService(name) {
+                    this.commandOutput += `> Starting ${name}...\n`;
+                    
+                    // In a real implementation, this would call a backend API
+                    // For now, just update the UI optimistically
+                    setTimeout(() => {
+                        this.commandOutput += `> ${name} started on port ${this.services[name].port}\n`;
+                        this.refreshData();
+                    }, 1000);
+                },
+                
+                stopService(name) {
+                    this.commandOutput += `> Stopping ${name}...\n`;
+                    
+                    // In a real implementation, this would call a backend API
+                    // For now, just update the UI optimistically
+                    setTimeout(() => {
+                        this.commandOutput += `> ${name} stopped\n`;
+                        this.refreshData();
+                    }, 1000);
+                },
+                
+                fetchLogs(serviceName) {
+                    // In a real implementation, this would fetch logs from a backend API
+                    // For now, just show a placeholder
+                    this.logs = `[${serviceName}] Service started on port ${this.services[serviceName]?.port}\n[${serviceName}] Listening for connections...\n`;
+                },
+                
+                executeCommand() {
+                    if (!this.command.trim()) return;
+                    
+                    this.commandOutput += `> ${this.command}\n`;
+                    
+                    // Simple command handling
+                    if (this.command.toLowerCase() === 'help') {
+                        this.commandOutput += "Available commands:\n";
+                        this.commandOutput += "  start <service> - Start a service\n";
+                        this.commandOutput += "  stop <service>  - Stop a service\n";
+                        this.commandOutput += "  status          - Show all services status\n";
+                        this.commandOutput += "  clear           - Clear console\n";
+                    } else if (this.command.toLowerCase() === 'status') {
+                        for (const [name, service] of Object.entries(this.services)) {
+                            this.commandOutput += `${name}: ${service.status} (Port: ${service.port})\n`;
+                        }
+                    } else if (this.command.toLowerCase() === 'clear') {
+                        this.commandOutput = '';
+                    } else if (this.command.toLowerCase().startsWith('start ')) {
+                        const serviceName = this.command.substring(6).trim();
+                        if (this.services[serviceName]) {
+                            this.startService(serviceName);
+                        } else {
+                            this.commandOutput += `Unknown service: ${serviceName}\n`;
+                        }
+                    } else if (this.command.toLowerCase().startsWith('stop ')) {
+                        const serviceName = this.command.substring(5).trim();
+                        if (this.services[serviceName]) {
+                            this.stopService(serviceName);
+                        } else {
+                            this.commandOutput += `Unknown service: ${serviceName}\n`;
+                        }
+                    } else {
+                        this.commandOutput += "Unknown command. Type 'help' for available commands.\n";
+                    }
+                    
+                    // Clear the input
+                    this.command = '';
+                    
+                    // Scroll to the bottom of the terminal
+                    this.$nextTick(() => {
+                        this.$refs.commandTerminal.scrollTop = this.$refs.commandTerminal.scrollHeight;
+                    });
+                },
+                
+                // Handle key events in PowerShell input (history, multiline)
+                handlePowershellKey(event) {
+                    if (event.key === 'Enter' && !event.shiftKey) {
+                        event.preventDefault();
+                        this.executePowershellCommand();
+                    } else if (event.key === 'ArrowUp') {
+                        event.preventDefault();
+                        if (this.powershellHistory.length > 0) {
+                            this.powershellHistoryIndex = Math.max(0, this.powershellHistoryIndex - 1);
+                            this.powershellCommand = this.powershellHistory[this.powershellHistoryIndex] || '';
+                        }
+                    } else if (event.key === 'ArrowDown') {
+                        event.preventDefault();
+                        if (this.powershellHistory.length > 0) {
+                            this.powershellHistoryIndex = Math.min(this.powershellHistory.length, this.powershellHistoryIndex + 1);
+                            this.powershellCommand = this.powershellHistory[this.powershellHistoryIndex] || '';
+                        }
+                    }
+                },
+                // Execute PowerShell command with structured JSON output
+                executePowershellCommand() {
+                    const cmd = this.powershellCommand.trim();
+                    if (!cmd) return;
+                    // Add to history
+                    this.powershellHistory.push(cmd);
+                    this.powershellHistoryIndex = this.powershellHistory.length;
+                    // Echo command
+                    this.powershellOutput += `\nPS> ${cmd}\n`;
+                    fetch('/powershell/execute', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ command: cmd })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.stdout) {
+                            this.powershellOutput += data.stdout;
+                        }
+                        if (data.stderr) {
+                            // Display stderr
+                            this.powershellOutput += `Error: ${data.stderr}`;
+                        }
+                        this.powershellOutput += `\n`;
+                        this.$nextTick(() => {
+                            this.$refs.powershellTerminal.scrollTop = this.$refs.powershellTerminal.scrollHeight;
+                        });
+                    })
+                    .catch(error => {
+                        this.powershellOutput += `Error: ${error.message}\n`;
+                    });
+                    // Clear input
+                    this.powershellCommand = '';
+                    // Focus back to input
+                    this.$nextTick(() => this.$refs.powershellInput.focus());
+                },
+                
+                loadSysinternalsData() {
+                    // Load initial data when tab is activated
+                    if (this.processData.length === 0) {
+                        this.loadProcessData();
+                    }
+                },
+                
+                refreshSysinternalsData() {
+                    // Refresh all data
+                    this.loadProcessData();
+                    this.loadNetworkData();
+                    this.loadSystemData();
+                },
+                
+                loadProcessData() {
+                    this.loadingProcesses = true;
+                    this.sysinternalsTab = 'processes';
+                    
+                    fetch('/sysinternals/processes')
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! Status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            this.processData = Array.isArray(data) ? data : [];
+                            this.loadingProcesses = false;
+                        })
+                        .catch(error => {
+                            console.error('Error fetching process data:', error);
+                            this.sysinternalsOutput += `\nError fetching process data: ${error.message}\n`;
+                            this.loadingProcesses = false;
+                        });
+                },
+                
+                loadNetworkData() {
+                    this.loadingNetwork = true;
+                    this.sysinternalsTab = 'network';
+                    
+                    fetch('/sysinternals/network')
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! Status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            this.networkData = Array.isArray(data) ? data : [];
+                            this.loadingNetwork = false;
+                        })
+                        .catch(error => {
+                            console.error('Error fetching network data:', error);
+                            this.sysinternalsOutput += `\nError fetching network data: ${error.message}\n`;
+                            this.loadingNetwork = false;
+                        });
+                },
+                
+                loadSystemData() {
+                    this.loadingSystem = true;
+                    this.sysinternalsTab = 'system';
+                    
+                    fetch('/sysinternals/sysinfo')
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! Status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            this.systemData = typeof data === 'object' ? data : {};
+                            this.loadingSystem = false;
+                        })
+                        .catch(error => {
+                            console.error('Error fetching system data:', error);
+                            this.sysinternalsOutput += `\nError fetching system data: ${error.message}\n`;
+                            this.loadingSystem = false;
+                        });
+                },
+                
+                loadProcessDetails(pid) {
+                    this.loadingProcessDetails = true;
+                    this.sysinternalsTab = 'process-details';
+                    
+                    fetch(`/sysinternals/process/${pid}`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! Status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            this.processDetails = data || {};
+                            this.loadingProcessDetails = false;
+                        })
+                        .catch(error => {
+                            console.error(`Error fetching process details for PID ${pid}:`, error);
+                            this.sysinternalsOutput += `\nError fetching process details: ${error.message}\n`;
+                            this.loadingProcessDetails = false;
+                        });
+                },
+                
+                executeSysinternalsCommand() {
+                    if (!this.sysinternalsCommand) return;
+                    
+                    this.sysinternalsOutput += `\n> ${this.sysinternalsCommand}\n`;
+                    
+                    // Parse command to determine what to do
+                    const cmd = this.sysinternalsCommand.toLowerCase().trim();
+                    
+                    if (cmd === 'help') {
+                        this.sysinternalsOutput += `
+Available commands:
+  help                - Show this help
+  processes           - Show running processes
+  network             - Show network connections
+  sysinfo             - Show system information
+  process <pid>       - Show details for a specific process
+  refresh             - Refresh all data
+`;
+                    } else if (cmd === 'processes') {
+                        this.loadProcessData();
+                        this.sysinternalsOutput += 'Loading process data...\n';
+                    } else if (cmd === 'network') {
+                        this.loadNetworkData();
+                        this.sysinternalsOutput += 'Loading network data...\n';
+                    } else if (cmd === 'sysinfo') {
+                        this.loadSystemData();
+                        this.sysinternalsOutput += 'Loading system information...\n';
+                    } else if (cmd === 'refresh') {
+                        this.refreshSysinternalsData();
+                        this.sysinternalsOutput += 'Refreshing all data...\n';
+                    } else if (cmd.startsWith('process ')) {
+                        const pid = parseInt(cmd.substring(8).trim());
+                        if (!isNaN(pid)) {
+                            this.loadProcessDetails(pid);
+                            this.sysinternalsOutput += `Loading details for process ${pid}...\n`;
+                        } else {
+                            this.sysinternalsOutput += 'Invalid PID. Usage: process <pid>\n';
+                        }
+                    } else {
+                        this.sysinternalsOutput += `Unknown command: ${cmd}\nType 'help' for available commands.\n`;
+                    }
+                    
+                    this.$refs.sysinternalsTerminal.scrollTop = this.$refs.sysinternalsTerminal.scrollHeight;
+                    this.sysinternalsCommand = '';
+                }
+            };
+        }
+    </script>
+</body>
+</html>

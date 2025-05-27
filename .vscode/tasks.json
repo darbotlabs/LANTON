@@ -1,0 +1,70 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/darbot-LANton.sln",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "publish",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "publish",
+                "${workspaceFolder}/LanHub/LanHub.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "watch",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "watch",
+                "run",
+                "--project",
+                "${workspaceFolder}/LanHub/LanHub.csproj"
+            ],
+            "problemMatcher": "$msCompile"
+        },        {
+            "label": "run port scan",
+            "command": "pwsh",
+            "type": "shell",
+            "args": [
+                "-File",
+                "${workspaceFolder}/scripts/port_scan.ps1"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "run enhanced port scan",
+            "command": "pwsh",
+            "type": "shell",
+            "args": [
+                "-File",
+                "${workspaceFolder}/scripts/port_scanner_enhanced.ps1"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "start lanton",
+            "command": "pwsh",
+            "type": "shell",
+            "args": [
+                "-File",
+                "${workspaceFolder}/start_lanton.ps1"
+            ],
+            "problemMatcher": []
+        }
+    ]
+}

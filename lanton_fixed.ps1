@@ -14,10 +14,14 @@
 #   lanton hostname <name>  - Configure custom hostname for LANton (requires admin)
 #   lanton scan ports       - Scan all ports on the local machine
 #   lanton history          - View port allocation history
+#   lanton network interfaces   - Show network interfaces
+#   lanton network connections  - Show active connections
+#   lanton network traffic      - Show interface traffic statistics
+#   lanton network sniff [sec]  - Capture packets for N seconds
 
 param(
     [Parameter(Position=0)]
-    [ValidateSet("start", "stop", "logs", "watch", "status", "hostname", "scan", "history")]
+    [ValidateSet("start", "stop", "logs", "watch", "status", "hostname", "scan", "history", "network")]
     [string]$Command,
     
     [Parameter(Position=1)]
@@ -257,6 +261,54 @@ function Set-LantonHostname {
     }
 }
 
+# Function to list network interfaces via LanHub
+function Get-NetworkInterfaces {
+    try {
+        $data = Invoke-RestMethod -Uri "$LanHubUrl/network/interfaces" -Method Get
+        $data | Format-Table -AutoSize
+    }
+    catch {
+        Write-Error "Failed to fetch network interfaces: $_"
+    }
+}
+
+# Function to list active TCP connections via LanHub
+function Get-NetworkConnections {
+    try {
+        $data = Invoke-RestMethod -Uri "$LanHubUrl/network/connections" -Method Get
+        $data | Format-Table -AutoSize
+    }
+    catch {
+        Write-Error "Failed to fetch network connections: $_"
+    }
+}
+
+# Function to list traffic statistics via LanHub
+function Get-NetworkTraffic {
+    try {
+        $data = Invoke-RestMethod -Uri "$LanHubUrl/network/traffic" -Method Get
+        $data | Format-Table -AutoSize
+    }
+    catch {
+        Write-Error "Failed to fetch network traffic: $_"
+    }
+}
+
+# Function to sniff packets via LanHub
+function Invoke-PacketSniffer {
+    param(
+        [int]$Duration = 5
+    )
+    try {
+        $url = "$LanHubUrl/network/sniff?seconds=$Duration"
+        $data = Invoke-RestMethod -Uri $url -Method Get
+        $data | Format-Table -AutoSize
+    }
+    catch {
+        Write-Error "Failed to run packet sniffer: $_"
+    }
+}
+
 # Main execution
 if (-not $Command) {
     Write-Output "LANton CLI - Command Line Interface for LANton services"
@@ -272,11 +324,19 @@ if (-not $Command) {
     Write-Output "  lanton hostname <name>  - Configure custom hostname for LANton (requires admin)"
     Write-Output "  lanton scan ports       - Scan all ports on the local machine"
     Write-Output "  lanton history          - View port allocation history"
+    Write-Output "  lanton network interfaces   - Show network interfaces"
+    Write-Output "  lanton network connections  - Show active connections"
+    Write-Output "  lanton network traffic      - Show interface traffic statistics"
+    Write-Output "  lanton network sniff [sec]  - Capture packets for N seconds"
     Write-Output ""
     Write-Output "Examples:"
     Write-Output "  lanton start all        - Start all LANton services"
     Write-Output "  lanton hostname lanton  - Make LANton accessible via http://lanton:7071"
     Write-Output "  lanton scan ports       - Show what ports are in use on this machine"
+    Write-Output "  lanton network interfaces   - Show network interfaces"
+    Write-Output "  lanton network connections  - Show active connections"
+    Write-Output "  lanton network traffic      - Show interface traffic statistics"
+    Write-Output "  lanton network sniff 10     - Capture packets for 10 seconds"
     exit 0
 }
 
@@ -394,5 +454,27 @@ switch ($Command) {
 
     "history" {
         Show-PortHistory
+    }
+
+    "network" {
+        if ($Target -eq "interfaces") {
+            Get-NetworkInterfaces
+        }
+        elseif ($Target -eq "connections") {
+            Get-NetworkConnections
+        }
+        elseif ($Target -eq "traffic") {
+            Get-NetworkTraffic
+        }
+        elseif ($Target -eq "sniff") {
+            $duration = 5
+            if ($AdditionalArgs.Length -gt 0 -and $AdditionalArgs[0] -match '\d+') {
+                $duration = [int]$AdditionalArgs[0]
+            }
+            Invoke-PacketSniffer -Duration $duration
+        }
+        else {
+            Write-Error "Usage: lanton network <interfaces|connections|traffic|sniff> [seconds]"
+        }
     }
 }

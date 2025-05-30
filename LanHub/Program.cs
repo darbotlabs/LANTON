@@ -21,8 +21,9 @@ builder.Services.AddHttpClient("SysinternalsClient", client =>
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
-// Register SysinternalsService
+// Register services
 builder.Services.AddSingleton<SysinternalsService>();
+builder.Services.AddSingleton<NetworkManagementService>();
 builder.Services.AddLogging();
 
 var app = builder.Build();
@@ -357,6 +358,12 @@ app.MapGet("/sysinternals/process/{pid}", async (int pid, SysinternalsService sy
         return Results.Problem($"Failed to get process details: {ex.Message}", statusCode: 500);
     }
 });
+
+// Network management endpoints
+app.MapGet("/network/interfaces", (NetworkManagementService svc) => svc.GetInterfaces());
+app.MapGet("/network/connections", (NetworkManagementService svc) => svc.GetTcpConnections());
+app.MapGet("/network/traffic", (NetworkManagementService svc) => svc.GetTrafficSummary());
+app.MapGet("/network/sniff", async (NetworkManagementService svc, int seconds) => await svc.CapturePacketsAsync(seconds));
 
 
 

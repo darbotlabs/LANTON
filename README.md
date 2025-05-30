@@ -60,6 +60,10 @@ lanton start all         # spin up every registered service
 lanton stop bitnet       # stop specific service
 lanton ports             # current port map
 lanton watch traffic     # live bytes in/out per port
+lanton network interfaces   # list active network interfaces
+lanton network connections  # show active TCP connections
+lanton network traffic      # show interface traffic summary
+lanton network sniff 5      # capture packets for 5 seconds
 ```
 
 ## 🧪 Validation Suite

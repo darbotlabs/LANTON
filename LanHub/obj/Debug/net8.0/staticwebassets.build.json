@@ -1,0 +1,39 @@
+{
+  "Version": 1,
+  "Hash": "L8aFxpGcql4Q5FExMJamBKtWrwDU4YWjjVZCEdU7ueM=",
+  "Source": "LanHub",
+  "BasePath": "_content/LanHub",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "LanHub/wwwroot",
+      "Source": "LanHub",
+      "ContentRoot": "/home/runner/work/LANTON/LANTON/LanHub/wwwroot/",
+      "BasePath": "_content/LanHub",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "/home/runner/work/LANTON/LANTON/LanHub/wwwroot/index.html",
+      "SourceId": "LanHub",
+      "SourceType": "Discovered",
+      "ContentRoot": "/home/runner/work/LANTON/LANTON/LanHub/wwwroot/",
+      "BasePath": "_content/LanHub",
+      "RelativePath": "index.html",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/index.html"
+    }
+  ]
+}

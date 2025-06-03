@@ -53,7 +53,7 @@ function Start-LanHub {
         if ($PSCmdlet.ShouldProcess("LanHub", "Start")) {
             Write-Information "Starting LanHub..."
             $lanhubPath = Join-Path $PSScriptRoot "LanHub"
-            Start-Process -FilePath "dotnet" -ArgumentList "run", "--project", $lanhubPath -NoNewWindow
+            Start-Process -FilePath "dotnet" -ArgumentList "run", "--project", $lanhubPath
             
             # Wait for LanHub to become available
             $retries = 0

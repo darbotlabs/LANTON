@@ -41,7 +41,7 @@ function Start-LanHub {
     if (-not (Test-LanHubRunning)) {
         Write-Host "Starting LanHub..."
         $lanhubPath = Join-Path $PSScriptRoot "LanHub"
-        Start-Process -FilePath "dotnet" -ArgumentList "run", "--project", $lanhubPath -NoNewWindow
+        Start-Process -FilePath "dotnet" -ArgumentList "run", "--project", $lanhubPath
         
         # Wait for LanHub to become available
         $retries = 0

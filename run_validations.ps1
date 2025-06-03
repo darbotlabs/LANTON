@@ -29,7 +29,7 @@ try {
     Write-Host "LanHub is already running"
 } catch {
     Write-Host "Starting LanHub..."
-    $process = Start-Process -FilePath "dotnet" -ArgumentList "run", "--project", "LanHub" -PassThru -NoNewWindow
+    $process = Start-Process -FilePath "dotnet" -ArgumentList "run", "--project", "LanHub" -PassThru
       # Wait for LanHub to start
     Start-Sleep -Seconds 10
 }
@@ -57,7 +57,7 @@ Write-Host ""
 # Level 3 Validation
 Write-Host "🚦 Validation Round 3 - P-Link Wrappers" -ForegroundColor Yellow
 Write-Host "Starting BitNet wrapper..."
-$process = Start-Process -FilePath "pwsh" -ArgumentList "-File", "wrappers\start_bitnet.ps1" -PassThru -NoNewWindow
+$process = Start-Process -FilePath "pwsh" -ArgumentList "-File", "wrappers/start_bitnet.ps1" -PassThru
 
 # Give it a moment to start
 Start-Sleep -Seconds 3
@@ -87,8 +87,8 @@ $null = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 
 # Level 5 Validation - Check if patches are applied
 Write-Host "🚦 Validation Round 5 - Integration Patch-Ups" -ForegroundColor Yellow
-$managementPatched = Select-String -Path "mock\darbot_management.html" -Pattern "fetch\('\/ports'\).then\(r=>r\.json\(\)\)"
-$gamesCodePatched = Select-String -Path "mock\Games\code.html" -Pattern "LANHub Ports.*7071\/ports"
+$managementPatched = Select-String -Path "mock/darbot_management.html" -Pattern "fetch\('\/ports'\).then\(r=>r\.json\(\)\)"
+$gamesCodePatched = Select-String -Path "mock/Games/code.html" -Pattern "LANHub Ports.*7071\/ports"
 
 if ($managementPatched -and $gamesCodePatched) {
     Write-Host "✅ Round 5 Passed! Integration patches applied." -ForegroundColor Green
@@ -125,8 +125,8 @@ Write-Host ""
 
 # Level 7 Validation - Packaging & Docs
 Write-Host "🚦 Validation Round 7 - Packaging & Docs" -ForegroundColor Yellow
-$hasLaunchJson = Test-Path -Path ".vscode\launch.json"
-$hasDevContainer = Test-Path -Path ".devcontainer\devcontainer.json"
+$hasLaunchJson = Test-Path -Path ".vscode/launch.json"
+$hasDevContainer = Test-Path -Path ".devcontainer/devcontainer.json"
 
 if ($hasLaunchJson -and $hasDevContainer) {
     Write-Host "✅ Round 7 Passed! VS Code configuration present." -ForegroundColor Green

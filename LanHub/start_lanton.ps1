@@ -17,8 +17,8 @@ if ($processes) {
 }
 
 # Start the server with the correct working directory
-$process = Start-Process -PassThru -NoNewWindow -FilePath "dotnet" `
-    -ArgumentList "bin\Debug\net10.0\LanHub.dll", "--urls=http://localhost:7071" `
+$process = Start-Process -PassThru -FilePath "dotnet" `
+    -ArgumentList "bin/Debug/net8.0/LanHub.dll", "--urls=http://localhost:7071" `
     -WorkingDirectory $scriptDir
 
 Write-Host "Waiting for server to initialize... (PID: $($process.Id))"

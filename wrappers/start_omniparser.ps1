@@ -40,7 +40,7 @@ if (Test-Path $agentPath) {
     $env:OMNIPARSER_PORT = $port
     
     # Start the Python agent with port specified both as arg and env var for compatibility
-    $process = Start-Process -FilePath "python" -ArgumentList $agentPath, "--port", $port -PassThru -NoNewWindow
+    $process = Start-Process -FilePath "python" -ArgumentList $agentPath, "--port", $port -PassThru
 }
 else {
     Write-Error "OmniParser agent script not found at expected location: $agentPath"

@@ -360,7 +360,7 @@ namespace LanHub
             };
             
             var lines = output.Split('\n');
-            string currentProcess = null;
+            string? currentProcess = null;
             
             foreach (var line in lines)
             {

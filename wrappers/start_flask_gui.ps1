@@ -41,7 +41,7 @@ if (Test-Path $serverPath) {
     $env:FLASK_APP = $serverPath
     
     # Start the Flask server
-    $process = Start-Process -FilePath "python" -ArgumentList "-m", "flask", "run", "--port", $port -PassThru -NoNewWindow
+    $process = Start-Process -FilePath "python" -ArgumentList "-m", "flask", "run", "--port", $port -PassThru
 }
 else {
     Write-Error "Flask GUI server script not found at expected location: $serverPath"

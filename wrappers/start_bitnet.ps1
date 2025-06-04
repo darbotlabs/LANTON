@@ -37,13 +37,13 @@ catch {
 $bitnetExePath = Join-Path -Path $PSScriptRoot -ChildPath "..\bin\bitnet.exe"
 if (Test-Path $bitnetExePath) {
     Write-Host "Using native BitNet executable"
-    $process = Start-Process -FilePath $bitnetExePath -ArgumentList "--port", $port -PassThru -NoNewWindow
+    $process = Start-Process -FilePath $bitnetExePath -ArgumentList "--port", $port -PassThru
 }
 else {
     Write-Host "Looking for Python BitNet implementation"
     $bitnetPyPath = Join-Path -Path $PSScriptRoot -ChildPath "..\lib\bitnet\server.py"
     if (Test-Path $bitnetPyPath) {
-        $process = Start-Process -FilePath "python" -ArgumentList $bitnetPyPath, "--port", $port -PassThru -NoNewWindow
+        $process = Start-Process -FilePath "python" -ArgumentList $bitnetPyPath, "--port", $port -PassThru
     }
     else {
         Write-Error "Neither BitNet executable nor Python implementation found"

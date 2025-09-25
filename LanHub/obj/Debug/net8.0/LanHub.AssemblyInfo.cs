@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("LanHub")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b703a849e7c237cba7006712c4a5a33fa9292a59")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ea6e9b997e90f3ac58c5aa6e35bd2169d1412c6b")]
 [assembly: System.Reflection.AssemblyProductAttribute("LanHub")]
 [assembly: System.Reflection.AssemblyTitleAttribute("LanHub")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
